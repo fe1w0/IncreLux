@@ -29,7 +29,7 @@
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
-#include "llvm/IR/CallSite.h"
+//#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Instructions.h"
@@ -137,7 +137,7 @@ static bool instructionIsCoverable(Instruction *i) {
       Instruction *prev = &*(--it);
       if (isa<CallInst>(prev) || isa<InvokeInst>(prev)) {
         Function *target =
-            getDirectCallTarget(CallSite(prev), /*moduleIsFullyLinked=*/true);
+            getDirectCallTarget(cast<CallBase>(*prev), /*moduleIsFullyLinked=*/true);
         if (target && target->doesNotReturn())
           return false;
       }
@@ -787,14 +787,15 @@ void StatsTracker::computeReachableUncovered() {
              it != ie; ++it) {
           Instruction *inst = &*it;
           if (isa<CallInst>(inst) || isa<InvokeInst>(inst)) {
-            CallSite cs(inst);
-            if (isa<InlineAsm>(cs.getCalledValue())) {
+//            CallSite cs(inst);
+              const CallBase &cb = cast<CallBase>(*inst);
+            if (isa<InlineAsm>(cb.getCalledOperand())) {
               // We can never call through here so assume no targets
               // (which should be correct anyhow).
               callTargets.insert(std::make_pair(inst,
                                                 std::vector<Function*>()));
             } else if (Function *target = getDirectCallTarget(
-                           cs, /*moduleIsFullyLinked=*/true)) {
+                           cb, /*moduleIsFullyLinked=*/true)) {
               callTargets[inst].push_back(target);
             } else {
               callTargets[inst] =

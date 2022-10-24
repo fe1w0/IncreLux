@@ -579,7 +579,7 @@ void FuncAnalysis::processFuncs(llvm::Instruction *I, llvm::Function *Callee, bo
 
     //OP<<"Calee: "<<Callee<<", " <<Callee->getName().str()<<", "<<Callee->getParent()->getName().str()<<"\n";
     if (Ctx->funcToMd.find(Callee) != Ctx->funcToMd.end()) {
-	std::string mName = Ctx->funcToMd[Callee];
+	std::string mName = Ctx->funcToMd[Callee].str();
 	fSummary.relatedBC.insert(mName);
 	//OP<<"fSummary.relatedBC.insert: "<<mName<<"\n";
 	//Ctx->FSummaries[F].relatedBC.insert(mName);

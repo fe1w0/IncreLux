@@ -349,7 +349,7 @@ bool StructAnalyzer::getContainer(std::string stid, const Module* M, std::set<st
         const StructType* container = container_pair.first;
         if (container->isLiteral())
             continue;
-        std::string id = container->getStructName();
+        std::string id = container->getStructName().str();
         if (id.find("struct.anon") == 0 ||
             id.find("union.anon") == 0) {
             // anon struct, get its parent instead

@@ -165,7 +165,7 @@ class SumNodeFactory{
                     // BaseTy->print(errs());
 
                     if (base->hasName())
-                        errs()<<" : " << base->getName();
+                        errs()<<" : " << base->getName().str();
                 }
             }
             else if (val != NULL && isa<Function>(val))

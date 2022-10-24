@@ -1354,7 +1354,7 @@ void FuncAnalysis::computeQualifier(llvm::Instruction *I, std::vector<int> &in, 
         {
             //OP<<"asm\n";
             //OP<<"getNumArgOperands() = "<<CI->getNumArgOperands()<<"\n";
-            InlineAsm *ASM = dyn_cast<InlineAsm>(CI->getCalledValue());
+            InlineAsm *ASM = dyn_cast<InlineAsm>(CI->getCalledOperand());
             InlineAsm::ConstraintInfoVector CIV = ASM->ParseConstraints();
             //check if all the input are init
             bool init = true;

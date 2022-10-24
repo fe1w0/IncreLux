@@ -11,8 +11,8 @@
 #define KLEE_MODULEUTIL_H
 
 #include "klee/Config/Version.h"
-
-#include "llvm/IR/CallSite.h"
+//#include "llvm/IR/CallSite.h"
+#include "llvm/IR/AbstractCallSite.h"
 #include "llvm/IR/Module.h"
 
 #include <memory>
@@ -43,7 +43,9 @@ linkModules(std::vector<std::unique_ptr<llvm::Module>> &modules,
 /// If `moduleIsFullyLinked` is set to true it will be assumed that the
 ///  module containing the `llvm::CallSite` is fully linked. This assumption
 ///  allows resolution of functions that are marked as overridable.
-llvm::Function *getDirectCallTarget(llvm::CallSite, bool moduleIsFullyLinked);
+//llvm::Function *getDirectCallTarget(llvm::CallSite, bool moduleIsFullyLinked);
+//llvm::Function *getDirectCallTarget(llvm::AbstractCallSite, bool moduleIsFullyLinked);
+llvm::Function *getDirectCallTarget(const llvm::CallBase &cb, bool moduleIsFullyLinked);
 
 /// Return true iff the given Function value is used in something
 /// other than a direct call (or a constant expression that

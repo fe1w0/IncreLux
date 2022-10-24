@@ -7,7 +7,8 @@
 
 #include "Symbolic.h"
 
-#include <llvm/IR/CallSite.h>
+//#include <llvm/IR/CallSite.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
@@ -301,11 +302,12 @@ namespace klee {
             state.encode.globalexpr.push_back(symbolic);
 
             Instruction *i = ki->inst;
-            llvm::CallSite cs(i);
-            unsigned numArgs = cs.arg_size();
+//            llvm::CallSite cs(i);
+            llvm::CallBase &cb = cast<CallBase>(*i);
+            unsigned numArgs = cb.arg_size();
             for (unsigned j = 0; j < numArgs; ++j) {
                 std::string argName = ss.str() + "call arg" + std::to_string(j);
-                Expr::Width size = executor->getWidthForLLVMType(cs.getArgument(j)->getType());
+                Expr::Width size = executor->getWidthForLLVMType(cb.getArgOperand(j)->getType());
                 ref<Expr> arg = manualMakeSymbolic(argName, size);
                 executor->uneval(ki, j + 1, state).value = arg;
 #if DEBUGINFO

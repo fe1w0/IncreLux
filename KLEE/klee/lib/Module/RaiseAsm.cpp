@@ -47,7 +47,7 @@ bool RaiseAsmPass::runOnInstruction(Module &M, Instruction *I) {
   if (!ci)
     return false;
 
-  InlineAsm *ia = dyn_cast<InlineAsm>(ci->getCalledValue());
+  InlineAsm *ia = dyn_cast<InlineAsm>(ci->getCalledOperand());
   if (!ia)
     return false;
 

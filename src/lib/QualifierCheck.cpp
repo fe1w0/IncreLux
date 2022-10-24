@@ -326,7 +326,7 @@ void FuncAnalysis::QualifierCheck()
             //1.check the input of assembly
             if (CI->isInlineAsm())
             {
-                InlineAsm *ASM = dyn_cast<InlineAsm>(CI->getCalledValue());
+                InlineAsm *ASM = dyn_cast<InlineAsm>(CI->getCalledOperand());
                 InlineAsm::ConstraintInfoVector CIV = ASM->ParseConstraints();
 
                 bool init = true;

@@ -267,7 +267,7 @@ void printCGJson(ModuleList &Modules)
 					llvm::Instruction *Ins = &i;
 					if (llvm::CallInst *CI = dyn_cast<CallInst>(Ins)) {
 						if (!CI->getCalledFunction()) {
-							if (InlineAsm *ASM = dyn_cast<InlineAsm>(CI->getCalledValue()))
+							if (InlineAsm *ASM = dyn_cast<InlineAsm>(CI->getCalledOperand()))
 								continue;
 
 

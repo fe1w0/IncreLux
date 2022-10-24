@@ -61,7 +61,7 @@ inline StringRef getStringFromMD(MDNode *MD, unsigned index=MD_NAME_INFO_OP) {
 static inline std::string getScopeName(const llvm::GlobalValue *GV) {
     //errs()<<"Inside getScopeName for "<<*GV<<"\n";
     if (llvm::GlobalValue::isExternalLinkage(GV->getLinkage()))
-        return GV->getName();
+        return GV->getName().str();
     else {
         llvm::StringRef moduleName = llvm::sys::path::stem(
                 GV->getParent()->getModuleIdentifier());
@@ -198,7 +198,7 @@ static inline std::string getRetId(llvm::CallInst *CI) {
 	if (llvm::Function *CF = CI->getCalledFunction())
 		return getRetId(CF);
 	else {
-		std::string sID = getValueId(CI->getCalledValue());
+		std::string sID = getValueId(CI->getCalledOperand());
 		if (sID != "")
 			return "ret." + sID;
 	}
@@ -210,10 +210,10 @@ static inline std::string getValueId(llvm::Value *V) {
 	else if (llvm::CallInst *CI = llvm::dyn_cast<llvm::CallInst>(V)) {
 		if (llvm::Function *F = CI->getCalledFunction())
 			if (F->getName().startswith("kint_arg.i"))
-				return getLoadStoreId(CI);
+				return getLoadStoreId(CI).str();
 		return getRetId(CI);
 	} else if (llvm::isa<llvm::LoadInst>(V) || llvm::isa<llvm::StoreInst>(V)) {
-		return getLoadStoreId(llvm::dyn_cast<llvm::Instruction>(V));
+		return getLoadStoreId(llvm::dyn_cast<llvm::Instruction>(V)).str();
 	} else if (llvm::isa<llvm::AllocaInst>(V)) {
 		return getVarId(dyn_cast<llvm::AllocaInst>(V));
 	}

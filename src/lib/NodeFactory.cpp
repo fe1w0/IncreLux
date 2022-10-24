@@ -199,12 +199,12 @@ NodeIndex AndersNodeFactory::getObjectNodeFor(const Value* val) {
         const GlobalValue* gval = dyn_cast<GlobalValue>(c);
         if (gval && gval->isDeclaration()) {
             if (isa<GlobalVariable>(gval)) {
-                auto itr = gobjMap->find(gval->getName());
+                auto itr = gobjMap->find(gval->getName().str());
                 if(itr != gobjMap->end()) {
                     val = itr->second;
                 }
             } else if (isa<Function>(gval)) {
-                auto itr = funcMap->find(gval->getName());
+                auto itr = funcMap->find(gval->getName().str());
                 if (itr != funcMap->end())
                     val = itr->second;
             }
@@ -281,7 +281,7 @@ unsigned AndersNodeFactory::constGEPtoFieldNum(const llvm::ConstantExpr* expr) c
     assert(expr->getOpcode() == Instruction::GetElementPtr && "constGEPtoVariable receives a non-gep expr!");
 
     unsigned offset = getGEPOffset(expr, dataLayout);
-    return offsetToFieldNum(GetUnderlyingObject(expr, *dataLayout, 0), offset, dataLayout, structAnalyzer, module);
+    return offsetToFieldNum(getUnderlyingObject(expr, 0), offset, dataLayout, structAnalyzer, module);
 }
 
 static void dumpLocation(const Value *val) {
@@ -296,11 +296,11 @@ static void dumpLocation(const Value *val) {
             std::string a;
             raw_string_ostream ao(a);
             inst->getType()->print(ao);
-            ao << " %" << inst->getName();
+            ao << " %" << inst->getName().str();
             for (auto const& i : *(inst->getParent())) {
                 if (const CallInst *ci = dyn_cast<CallInst>(&i)) {
                     Function *f = ci->getCalledFunction();
-                    if (f != nullptr && !f->getName().compare("llvm.dbg.value")) {
+                    if (f != nullptr && !f->getName().str().compare("llvm.dbg.value")) {
                         std::string m;
                         raw_string_ostream mo(m);
                         ci->getOperand(0)->print(mo);
@@ -361,11 +361,11 @@ void AndersNodeFactory::dumpNode(NodeIndex idx) const {
                // BaseTy->print(errs());
 
             if (base->hasName())
-                OP<<" : " << base->getName();
+                OP<<" : " << base->getName().str();
         }
     }
     else if (isa<Function>(val))
-        OP<<"f> " << val->getName();
+        OP<<"f> " << val->getName().str();
     else
         OP<<"v> " << *val;
     OP<<"\n";

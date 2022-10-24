@@ -8,7 +8,7 @@
 #include <llvm/IR/InlineAsm.h>
 #include <llvm/ADT/StringExtras.h>
 #include <llvm/Analysis/CallGraph.h>
-#include "llvm/IR/CallSite.h"
+//#include "llvm/IR/CallSite.h"
 
 #include "CallGraph.h"
 #include "Annotation.h"
@@ -238,7 +238,8 @@ void CallGraphPass::findCalleesByType(CallInst *CI, FuncSet &S) {
     if (CI->isInlineAsm())
         return;
 
-    CallSite CS(CI);
+//    CallSite CS(CI);
+    const CallBase &CS = cast<CallBase>(*CI);
     for (Function *F : Ctx->AddressTakenFuncs) {
     //for (Function *F : Ctx->FPtrs) {
         // VarArg
@@ -258,7 +259,8 @@ void CallGraphPass::findCalleesByType(CallInst *CI, FuncSet &S) {
 	
         //Type matching on args.
         bool Matched = true;
-        CallSite::arg_iterator AI = CS.arg_begin();
+//        CallSite::arg_iterator AI = CS.arg_begin();
+        auto AI = CS.arg_begin();
 	int argNo = 0;
         for (Function::arg_iterator FI = F->arg_begin(), FE = F->arg_end();
              FI != FE; ++FI, ++AI) {
@@ -299,7 +301,8 @@ void CallGraphPass::findFunctionsCons(CallInst *CI, Module *M, FuncSet &S)
 	if (CI->isInlineAsm())
 		return;
 	//errs()<<"Inside findFunctionsCons: \n";
-	CallSite CS(CI);
+//	CallSite CS(CI);
+    const CallBase &CS = cast<CallBase>(*CI);
 	//errs() << *CI << "\n";
 	for (Function &F : *M)
 	{
@@ -328,7 +331,8 @@ void CallGraphPass::findFunctionsCons(CallInst *CI, Module *M, FuncSet &S)
 			continue;
 		}
 
-		CallSite::arg_iterator AI = CS.arg_begin();
+//		CallSite::arg_iterator AI = CS.arg_begin();
+        auto AI = CS.arg_begin();
 		for (Function::arg_iterator FI = F.arg_begin(), FE = F.arg_end();
 			 FI != FE; ++FI, ++AI)
 		{
@@ -446,7 +450,7 @@ bool CallGraphPass::findFunctions(Value *V, FuncSet &S,
 		// update callsite info first
 		FuncSet &FS = Ctx->Callees[CI];
 		//FS.setCallerInfo(CI, &Ctx->Callers);
-		findFunctions(CI->getCalledValue(), FS);
+		findFunctions(CI->getCalledOperand(), FS);
 		bool Changed = false;
 		for (Function *CF : FS)
 		{
@@ -535,7 +539,7 @@ bool CallGraphPass::runOnFunction(Function *F)
 			if (CI->isInlineAsm() || isa<DbgInfoIntrinsic>(I))
 			{
 #if 0
-				InlineAsm *Asm = dyn_cast<InlineAsm>(CI->getCalledValue());
+				InlineAsm *Asm = dyn_cast<InlineAsm>(CI->getCalledOperand());
 				errs() << "InlineAsm: " << F->getParent()->getModuleIdentifier() << "::"
 					   << F->getName().str() << "::" << Asm->getAsmString() << "\n";
 #endif
@@ -561,11 +565,12 @@ bool CallGraphPass::runOnFunction(Function *F)
 				}	
 			}
 #endif
-			CallSite CS(CI);
+//			CallSite CS(CI);
+            const CallBase &CS = cast<CallBase>(*CI);
 			// might be an indirect call, find all possible callees
 			FuncSet &FS = Ctx->Callees[CI];
 			//FS.setCallerInfo(CI, &Ctx->Callers);
-			//OP<<"CI->getCalledValue: "<<*CI->getCalledValue()<<"\n";
+			//OP<<"CI->getCalledOperand: "<<*CI->getCalledOperand()<<"\n";
 			//errs()<<"1findFunctions \n";
 			#ifdef ADD_MLTA
 			if (CS.isIndirectCall()) {
@@ -573,7 +578,7 @@ bool CallGraphPass::runOnFunction(Function *F)
 			    //findCalleesByType(CI,FS);
 			}
 			#endif
-			if (!findFunctions(CI->getCalledValue(), FS) && FS.empty())
+			if (!findFunctions(CI->getCalledOperand(), FS) && FS.empty())
 				continue;
 			//errs()<<"1end.\n";
 			for (Function *Callee : FS)
@@ -647,7 +652,7 @@ bool CallGraphPass::doInitialization(Module *M)
 			processInitializers(M, g.getInitializer(), &g, "");
 
 			if (g.hasExternalLinkage())
-				Ctx->Gobjs[g.getName()] = &g;
+				Ctx->Gobjs[g.getName().str()] = &g;
 		}
 	}
 
@@ -713,7 +718,7 @@ bool CallGraphPass::doInitialization(Module *M)
 		else
 		{
 			std::string fName = f.getName().str();
-			std::string mName = Ctx->ModuleMaps[M];//M->getName().str();
+			std::string mName = Ctx->ModuleMaps[M].str();//M->getName().str();
 			// OP<<"fName = "<<fName<<", mName = "<<mName<<"\n";
 			size_t pos = mName.find("lll-");
 			std::string relMName = "";
@@ -748,13 +753,13 @@ bool CallGraphPass::doFinalization(Module *M)
 			{
 				FuncSet &FS = Ctx->Callees[CI];
 				//FS.setCallerInfo(CI, &Ctx->Callers);
-				findFunctions(CI->getCalledValue(), FS);
+				findFunctions(CI->getCalledOperand(), FS);
 
 				// if the target is empty, we still need to report
 				// this code pointer
 #if 0
 				if (FS.empty()) {
-					outs() << getAnnotation(CI->getCalledValue(), M) << "\n";
+					outs() << getAnnotation(CI->getCalledOperand(), M) << "\n";
 				}
 #endif
 
@@ -875,7 +880,7 @@ void CallGraphPass::fillCallGraphs()
 		//LOC.print(OS);
 		//OS << "^@^";
 		//if (v.empty())
-		//        errs() << "!!EMPTY =>" << *CI->getCalledValue();
+		//        errs() << "!!EMPTY =>" << *CI->getCalledOperand();
 		for (FuncSet::iterator j = v.begin(), ej = v.end();
 			 j != ej; ++j)
 		{
@@ -950,7 +955,7 @@ void CallGraphPass::dumpCallees()
 		LOC.print(OS);
 		OS << "^@^";
 		if (v.empty())
-			OS << "!!EMPTY =>" << *CI->getCalledValue();
+			OS << "!!EMPTY =>" << *CI->getCalledOperand();
 		for (FuncSet::iterator j = v.begin(), ej = v.end();
 			 j != ej; ++j)
 		{

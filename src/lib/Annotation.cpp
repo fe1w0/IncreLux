@@ -3,6 +3,7 @@
 // Created by ubuntu on 2/6/18.
 //
 
+#include <llvm/Support/raw_ostream.h>
 #include "Annotation.h"
 
 
@@ -240,7 +241,7 @@ std::string getAnnotation(Value *V, Module *M) {
 			continue;
 		}
 		if (CallInst *CI = dyn_cast<CallInst>(v)) {
-			Value *CV = CI->getCalledValue();
+			Value *CV = CI->getCalledOperand();
 			// handle simple cast expr
 			if (ConstantExpr *CE = dyn_cast<ConstantExpr>(CV)) {
 				if (CE->isCast())
@@ -330,7 +331,7 @@ std::string getStructId(Value *PVal, User::op_iterator &IS, User::op_iterator &I
 	// new styple, try to handle the top most struct type
 	StructType *STy = nullptr;
 	for (++IE; IS != IE; ++IS) {
-		CompositeType *CT = dyn_cast<CompositeType>(PTy);
+		auto *CT = dyn_cast<StructType>(PTy);
 		if (!CT) break;
 		if ((STy = dyn_cast<StructType>(CT))) break;
 		if (!CT->indexValid(*IS)) break;
@@ -459,7 +460,7 @@ std::string getAnonStructId(Value *V, Module *M, StringRef Prefix) {
 		break;
 	}
 
-	return Prefix;
+	return Prefix.str();
 }
 
 

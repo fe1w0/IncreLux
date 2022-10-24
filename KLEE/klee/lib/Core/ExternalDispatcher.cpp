@@ -10,7 +10,7 @@
 #include "ExternalDispatcher.h"
 #include "klee/Config/Version.h"
 
-#include "llvm/IR/CallSite.h"
+//#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
@@ -196,7 +196,7 @@ bool ExternalDispatcherImpl::executeCall(Function *f, Instruction *i,
         std::move(dispatchModuleUniq)); // MCJIT takes ownership
     // Force code generation
     uint64_t fnAddr =
-        executionEngine->getFunctionAddress(dispatcher->getName());
+        executionEngine->getFunctionAddress(dispatcher->getName().str());
     executionEngine->finalizeObject();
     assert(fnAddr && "failed to get function address");
     (void)fnAddr;
@@ -253,17 +253,11 @@ bool ExternalDispatcherImpl::runProtectedCall(Function *f, uint64_t *args) {
 Function *ExternalDispatcherImpl::createDispatcher(Function *target,
                                                    Instruction *inst,
                                                    Module *module) {
-  if (!resolveSymbol(target->getName()))
+  if (!resolveSymbol(target->getName().str()))
     return 0;
 
-  CallSite cs;
-  if (inst->getOpcode() == Instruction::Call) {
-    cs = CallSite(cast<CallInst>(inst));
-  } else {
-    cs = CallSite(cast<InvokeInst>(inst));
-  }
-
-  Value **args = new Value *[cs.arg_size()];
+    const CallBase &cb = cast<CallBase>(*inst);
+    Value **args = new Value *[cb.arg_size()];
 
   std::vector<Type *> nullary;
 
@@ -292,8 +286,7 @@ Function *ExternalDispatcherImpl::createDispatcher(Function *target,
 
   // Each argument will be passed by writing it into gTheArgsP[i].
   unsigned i = 0, idx = 2;
-  for (CallSite::arg_iterator ai = cs.arg_begin(), ae = cs.arg_end(); ai != ae;
-       ++ai, ++i) {
+    for (auto ai = cb.arg_begin(), ae = cb.arg_end(); ai != ae; ++ai, ++i) {
     // Determine the type the argument will be passed as. This accommodates for
     // the corresponding code in Executor.cpp for handling calls to bitcasted
     // functions.
